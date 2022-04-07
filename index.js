@@ -69,7 +69,7 @@ class Spinnies {
     return this.spinners[name];
   }
 
-  succeed(name, options = {}) {
+  succeed(name, options) {
     if (typeof options === "string") {
       options = {
         text: options,
@@ -77,13 +77,21 @@ class Spinnies {
         textColor: "none"
       }
     }
+
+    if (!options) {
+      options = {
+        prefixColor: "green",
+        textColor: "none"
+      };
+    }
+
     this.setSpinnerProperties(name, options, 'succeed');
     this.updateSpinnerState();
 
     return this.spinners[name];
   }
 
-  fail(name, options = {}) {
+  fail(name, options) {
     if (typeof options === "string") {
       options = {
         text: options,
@@ -92,7 +100,36 @@ class Spinnies {
       }
     }
 
+    if (!options) {
+      options = {
+        prefixColor: "red",
+        textColor: "none"
+      };
+    }
+
     this.setSpinnerProperties(name, options, 'fail');
+    this.updateSpinnerState();
+
+    return this.spinners[name];
+  }
+
+  warn(name, options) {
+    if (typeof options === "string") {
+      options = {
+        text: options,
+        prefixColor: "yellow",
+        textColor: "none"
+      }
+    }
+
+    if (!options) {
+      options = {
+        prefixColor: "yellow",
+        textColor: "none"
+      };
+    }
+
+    this.setSpinnerProperties(name, options, 'warn');
     this.updateSpinnerState();
 
     return this.spinners[name];
@@ -127,8 +164,8 @@ class Spinnies {
       const { status: currentStatus } = this.spinners[name];
       const options = this.spinners[name];
 
-      if (!['fail', 'succeed', 'non-spinnable'].includes(currentStatus)) {
-        if (!['succeed', 'fail'].includes(newStatus)) {
+      if (!['fail', 'succeed', 'warn', 'non-spinnable'].includes(currentStatus)) {
+        if (!['succeed', 'fail', 'warn'].includes(newStatus)) {
           newStatus = 'stopped';
         }
 
@@ -139,6 +176,10 @@ class Spinnies {
             break;
           case 'succeed':
             options.prefixColor = 'green';
+            options.textColor = 'none';
+            break;
+          case 'warn':
+            options.prefixColor = 'yellow';
             options.textColor = 'none';
             break;
           default:
@@ -192,7 +233,7 @@ class Spinnies {
     const hasActiveSpinners = this.hasActiveSpinners();
     Object
       .values(this.spinners)
-      .map(({ text, status, textColor, prefixColor, succeedPrefix, failPrefix, stoppedPrefix, indent }) => {
+      .map(({ text, status, textColor, prefixColor, succeedPrefix, failPrefix, warnPrefix, stoppedPrefix, indent }) => {
         let line;
         let prefixLength = indent || 0;
 
@@ -210,6 +251,10 @@ class Spinnies {
           case 'fail':
             prefixLength += failPrefix.length + 1;
             prefix = `${failPrefix} `;
+            break;
+          case 'warn':
+            prefixLength += warnPrefix.length + 1;
+            prefix = `${warnPrefix} `;
             break;
           default:
             prefixLength += stoppedPrefix ? stoppedPrefix.length + 1 : 0;
