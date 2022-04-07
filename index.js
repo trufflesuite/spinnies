@@ -149,7 +149,6 @@ class Spinnies {
       }
     });
     this.checkIfActiveSpinners();
-
     return this.spinners;
   }
 
@@ -183,6 +182,7 @@ class Spinnies {
     return setInterval(() => {
       this.setStreamOutput(frames[this.currentFrameIndex]);
       this.currentFrameIndex = this.currentFrameIndex === frames.length - 1 ? 0 : ++this.currentFrameIndex
+      this.checkIfActiveSpinners();
     }, interval);
   }
 
