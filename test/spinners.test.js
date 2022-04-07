@@ -96,6 +96,7 @@ describe('Spinnies', () => {
 
       expectToBehaveLikeAnUpdate(this, 'succeed');
       expectToBehaveLikeAnUpdate(this, 'fail');
+      expectToBehaveLikeAnUpdate(this, 'stop');
       expectToBehaveLikeAnUpdate(this, 'update');
 
       describe('#stopAll', () => {

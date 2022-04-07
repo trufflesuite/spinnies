@@ -195,6 +195,16 @@ declare class Spinnies {
     fail(name: string, textOrOptions?: string | Partial<Spinnies.SpinnerOptions>): Spinnies.SpinnerOptions;
 
     /**
+     * Sets the specified spinner status as stopped.
+     *
+     * @returns full `SpinnerOptions` object for the given spinner, with
+     * defaults applied
+     */
+    stop(name: string, text?: string): Spinnies.SpinnerOptions;
+    stop(name: string, options?: Partial<Spinnies.SpinnerOptions>): Spinnies.SpinnerOptions;
+    stop(name: string, textOrOptions?: string | Partial<Spinnies.SpinnerOptions>): Spinnies.SpinnerOptions;
+
+    /**
      * Stops the spinners and sets the non-succeeded and non-failed ones to the provided status.
      *
      * @returns an object that maps spinner names to final `SpinnerOptions` objects for each spinner, with

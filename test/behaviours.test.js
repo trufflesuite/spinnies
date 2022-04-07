@@ -5,6 +5,7 @@ const expect = require('chai').expect
 function expectToBehaveLikeAnUpdate(self, status) {
   const statusMap = {
     update: "spinning",
+    stop: "stopped",
     succeed: "succeed",
     fail: "fail"
   };

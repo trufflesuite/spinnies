@@ -98,6 +98,22 @@ class Spinnies {
     return this.spinners[name];
   }
 
+  stop(name, options = {}) {
+    if (typeof options === "string") {
+      options = {
+        text: options,
+        prefixColor: "red",
+        textColor: "none"
+      }
+    }
+
+    this.setSpinnerProperties(name, options, 'stopped');
+    this.updateSpinnerState();
+
+    return this.spinners[name];
+  }
+
+
   remove(name) {
     if (typeof name !== 'string') throw Error('A spinner reference name must be specified');
     const spinner = this.spinners[name];
