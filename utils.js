@@ -6,7 +6,48 @@ const { dashes, dots } = require('./spinners');
 const chalk = require('chalk');
 
 const VALID_STATUSES = ['succeed', 'fail', 'warn', 'spinning', 'non-spinnable', 'stopped'];
-const VALID_COLORS = ['black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white', 'gray', 'redBright', 'greenBright', 'yellowBright', 'blueBright', 'magentaBright', 'cyanBright', 'whiteBright', 'none'];
+
+// See: https://github.com/chalk/chalk/blob/v4.1.2/index.d.ts#L6-L49
+const VALID_COLORS = [
+  'black',
+  'red',
+  'green',
+  'yellow',
+  'blue',
+  'magenta',
+  'cyan',
+  'white',
+  'gray',
+  'grey',
+  'blackBright',
+  'redBright',
+  'greenBright',
+  'yellowBright',
+  'blueBright',
+  'magentaBright',
+  'cyanBright',
+  'whiteBright',
+  'bgBlack',
+  'bgRed',
+  'bgGreen',
+  'bgYellow',
+  'bgBlue',
+  'bgMagenta',
+  'bgCyan',
+  'bgWhite',
+  'bgGray',
+  'bgGrey',
+  'bgBlackBright',
+  'bgRedBright',
+  'bgGreenBright',
+  'bgYellowBright',
+  'bgBlueBright',
+  'bgMagentaBright',
+  'bgCyanBright',
+  'bgWhiteBright',
+  // the only non-chalk color - we handle this separately as a special placholder for default terminal foreground color
+  'none'
+];
 
 function purgeSpinnerOptions(options) {
   const { text, status, indent } = options;

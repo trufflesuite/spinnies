@@ -5,27 +5,14 @@
 export as namespace Spinnies;
 export = Spinnies;
 
+import { Color as ChalkColor } from "chalk";
+
 declare namespace Spinnies {
     const dots: Spinner;
     const dashes: Spinner;
 
     type Color =
-        "black"
-      | "red"
-      | "green"
-      | "yellow"
-      | "blue"
-      | "magenta"
-      | "cyan"
-      | "white"
-      | "gray"
-      | "redBright"
-      | "greenBright"
-      | "yellowBright"
-      | "blueBright"
-      | "magentaBright"
-      | "cyanBright"
-      | "whiteBright"
+      ChalkColor
       | "none";
 
     type StopAllStatus = "succeed" | "fail" | "warn" | "stopped";
