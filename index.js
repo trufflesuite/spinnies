@@ -1,20 +1,18 @@
 'use strict';
 
 const readline = require('readline');
-const chalk = require('chalk');
 const cliCursor = require('cli-cursor');
 const { dashes, dots } = require('./spinners');
 
-const { purgeSpinnerOptions, purgeSpinnersOptions, colorOptions, breakText, getLinesLength, terminalSupportsUnicode } = require('./utils');
+const { purgeSpinnerOptions, purgeSpinnersOptions, colorOptions, prefixOptions, breakText, getLinesLength, terminalSupportsUnicode, applyColor } = require('./utils');
 const { isValidStatus, writeStream, cleanStream } = require('./utils');
 
 class Spinnies {
   constructor(options = {}) {
     options = purgeSpinnersOptions(options);
     this.options = {
-      spinnerColor: 'greenBright',
-      succeedColor: 'green',
-      failColor: 'red',
+      prefixColor: 'none',
+      textColor: 'none',
       spinner: terminalSupportsUnicode() ? dots : dashes,
       disableSpins: false,
       ...options
@@ -34,12 +32,21 @@ class Spinnies {
   }
 
   add(name, options = {}) {
-    if (typeof name !== 'string') throw Error('A spinner reference name must be specified');
-    if (!options.text) options.text = name;
+    if (typeof name !== 'string') {
+      throw Error('A spinner reference name must be specified');
+    }
+
+    if (typeof options === "string") {
+      options = { text: options };
+    }
+
+    if (!options.text) {
+      options.text = name;
+    }
+
     const spinnerProperties = {
       ...colorOptions(this.options),
-      succeedPrefix: this.options.succeedPrefix,
-      failPrefix: this.options.failPrefix,
+      ...prefixOptions(this.options),
       status: 'spinning',
       ...purgeSpinnerOptions(options),
     };
@@ -51,6 +58,10 @@ class Spinnies {
   }
 
   update(name, options = {}) {
+    if (typeof options === "string") {
+      options = { text: options };
+    }
+
     const { status } = options;
     this.setSpinnerProperties(name, options, status);
     this.updateSpinnerState();
@@ -58,19 +69,87 @@ class Spinnies {
     return this.spinners[name];
   }
 
-  succeed(name, options = {}) {
+  succeed(name, options) {
+    if (typeof options === "string") {
+      options = {
+        text: options,
+        prefixColor: "green",
+        textColor: "none"
+      }
+    }
+
+    if (!options) {
+      options = {
+        prefixColor: "green",
+        textColor: "none"
+      };
+    }
+
     this.setSpinnerProperties(name, options, 'succeed');
     this.updateSpinnerState();
 
     return this.spinners[name];
   }
 
-  fail(name, options = {}) {
+  fail(name, options) {
+    if (typeof options === "string") {
+      options = {
+        text: options,
+        prefixColor: "red",
+        textColor: "none"
+      }
+    }
+
+    if (!options) {
+      options = {
+        prefixColor: "red",
+        textColor: "none"
+      };
+    }
+
     this.setSpinnerProperties(name, options, 'fail');
     this.updateSpinnerState();
 
     return this.spinners[name];
   }
+
+  warn(name, options) {
+    if (typeof options === "string") {
+      options = {
+        text: options,
+        prefixColor: "yellow",
+        textColor: "none"
+      }
+    }
+
+    if (!options) {
+      options = {
+        prefixColor: "yellow",
+        textColor: "none"
+      };
+    }
+
+    this.setSpinnerProperties(name, options, 'warn');
+    this.updateSpinnerState();
+
+    return this.spinners[name];
+  }
+
+  stop(name, options = {}) {
+    if (typeof options === "string") {
+      options = {
+        text: options,
+        prefixColor: "red",
+        textColor: "none"
+      }
+    }
+
+    this.setSpinnerProperties(name, options, 'stopped');
+    this.updateSpinnerState();
+
+    return this.spinners[name];
+  }
+
 
   remove(name) {
     if (typeof name !== 'string') throw Error('A spinner reference name must be specified');
@@ -83,18 +162,34 @@ class Spinnies {
   stopAll(newStatus = 'stopped') {
     Object.keys(this.spinners).forEach(name => {
       const { status: currentStatus } = this.spinners[name];
-      if (currentStatus !== 'fail' && currentStatus !== 'succeed' && currentStatus !== 'non-spinnable') {
-        if (newStatus === 'succeed' || newStatus === 'fail') {
-          this.spinners[name].status = newStatus;
-          this.spinners[name].color = this.options[`${newStatus}Color`];
-        } else {
-          this.spinners[name].status = 'stopped';
-          this.spinners[name].color = 'grey';
+      const options = this.spinners[name];
+
+      if (!['fail', 'succeed', 'warn', 'non-spinnable'].includes(currentStatus)) {
+        if (!['succeed', 'fail', 'warn'].includes(newStatus)) {
+          newStatus = 'stopped';
         }
+
+        switch(newStatus) {
+          case 'fail':
+            options.prefixColor = 'red';
+            options.textColor = 'none';
+            break;
+          case 'succeed':
+            options.prefixColor = 'green';
+            options.textColor = 'none';
+            break;
+          case 'warn':
+            options.prefixColor = 'yellow';
+            options.textColor = 'none';
+            break;
+          default:
+            options.textColor = 'none';
+        }
+
+        options.status = newStatus;
       }
     });
     this.checkIfActiveSpinners();
-
     return this.spinners;
   }
 
@@ -128,6 +223,7 @@ class Spinnies {
     return setInterval(() => {
       this.setStreamOutput(frames[this.currentFrameIndex]);
       this.currentFrameIndex = this.currentFrameIndex === frames.length - 1 ? 0 : ++this.currentFrameIndex
+      this.checkIfActiveSpinners();
     }, interval);
   }
 
@@ -137,29 +233,43 @@ class Spinnies {
     const hasActiveSpinners = this.hasActiveSpinners();
     Object
       .values(this.spinners)
-      .map(({ text, status, color, spinnerColor, succeedColor, failColor, succeedPrefix, failPrefix, indent }) => {
+      .map(({ text, status, textColor, prefixColor, succeedPrefix, failPrefix, warnPrefix, stoppedPrefix, indent }) => {
         let line;
         let prefixLength = indent || 0;
-        if (status === 'spinning') {
-          prefixLength += frame.length + 1;
-          text = breakText(text, prefixLength);
-          line = `${chalk[spinnerColor](frame)} ${color ? chalk[color](text) : text}`;
-        } else {
-          if (status === 'succeed') {
+
+        let prefix = '';
+
+        switch(status) {
+          case 'spinning':
+            prefixLength += frame.length + 1;
+            prefix = `${frame} `
+            break;
+          case 'succeed':
             prefixLength += succeedPrefix.length + 1;
-            if (hasActiveSpinners) text = breakText(text, prefixLength);
-            line = `${chalk.green(succeedPrefix)} ${chalk[succeedColor](text)}`;
-          } else if (status === 'fail') {
+            prefix = `${succeedPrefix} `;
+            break;
+          case 'fail':
             prefixLength += failPrefix.length + 1;
-            if (hasActiveSpinners) text = breakText(text, prefixLength);
-            line = `${chalk.red(failPrefix)} ${chalk[failColor](text)}`;
-          } else {
-            if (hasActiveSpinners) text = breakText(text, prefixLength);
-            line = color ? chalk[color](text) : text;
-          }
+            prefix = `${failPrefix} `;
+            break;
+          case 'warn':
+            prefixLength += warnPrefix.length + 1;
+            prefix = `${warnPrefix} `;
+            break;
+          default:
+            prefixLength += stoppedPrefix ? stoppedPrefix.length + 1 : 0;
+            prefix = stoppedPrefix ? `${stoppedPrefix} ` : "";
+            break;
         }
+
+        if (status === 'spinning' || hasActiveSpinners) {
+          text = breakText(text, prefixLength);
+        }
+
+        line = `${applyColor(prefixColor, prefix)}${applyColor(textColor, text)}`
+
         linesLength.push(...getLinesLength(text, prefixLength));
-        output += indent ? `${" ".repeat(indent)}${line}\n` : `${line}\n`;
+        output += indent ? `${' '.repeat(indent)}${line}\n` : `${line}\n`;
       });
 
     if(!hasActiveSpinners) readline.clearScreenDown(this.stream);
@@ -195,6 +305,7 @@ class Spinnies {
       process.exit(0);
     });
   }
+
 }
 
 module.exports = Spinnies;
