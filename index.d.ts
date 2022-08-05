@@ -11,9 +11,7 @@ declare namespace Spinnies {
     const dots: Spinner;
     const dashes: Spinner;
 
-    type Color =
-      ChalkColor
-      | "none";
+    type Color = typeof ChalkColor | "none";
 
     type StopAllStatus = "succeed" | "fail" | "warn" | "stopped";
     type SpinnerStatus = StopAllStatus | "spinning" | "non-spinnable";
