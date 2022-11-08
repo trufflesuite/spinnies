@@ -2,7 +2,7 @@
 
 const readline = require('readline');
 const stripAnsi = require('strip-ansi');
-const { dashes, dots } = require('./spinners');
+const { dashes, dots } = require('./spinners.json');
 const chalk = require('chalk');
 
 const VALID_STATUSES = ['succeed', 'fail', 'warn', 'spinning', 'non-spinnable', 'stopped'];

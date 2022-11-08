@@ -2,7 +2,7 @@
 
 const readline = require('readline');
 const cliCursor = require('cli-cursor');
-const { dashes, dots } = require('./spinners');
+const { dashes, dots } = require('./spinners.json');
 
 const { purgeSpinnerOptions, purgeSpinnersOptions, colorOptions, prefixOptions, breakText, getLinesLength, terminalSupportsUnicode, applyColor } = require('./utils');
 const { isValidStatus, writeStream, cleanStream } = require('./utils');
